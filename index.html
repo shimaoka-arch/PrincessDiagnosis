@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Princess Jewelry Diagnosis</title>
+    <style>
+        /* --- ロマンチック・ディズニー風デザイン --- */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Zen+Mincho&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Zen Mincho', serif;
+            background: linear-gradient(135deg, #ffdde1 0%, #ee9ca7 100%); /* 優しいピンクのグラデーション */
+            color: #4a4a4a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* キラキラ背景エフェクト（簡易版） */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 2px solid #fff;
+            position: relative;
+            text-align: center;
+        }
+
+        /* 装飾的な枠線 */
+        .container::after {
+            content: "";
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid #ee9ca7;
+            border-radius: 15px;
+            pointer-events: none;
+        }
+
+        h1, h2 {
+            font-family: 'Cinzel', serif;
+            color: #d65db1;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* 入力フォームスタイル */
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            font-size: 12px;
+            color: #d65db1;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: 'Zen Mincho', serif;
+            background: #fffafa;
+        }
+
+        /* ボタン */
+        .btn {
+            background: linear-gradient(to right, #d65db1, #845ec2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Zen Mincho', serif;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(132, 94, 194, 0.3);
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* 選択肢ボタン */
+        .option-btn {
+            display: block;
+            width: 100%;
+            background: white;
+            border: 1px solid #ee9ca7;
+            color: #555;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option-btn:hover, .option-btn:active {
+            background: #fff0f5;
+            border-color: #d65db1;
+            color: #d65db1;
+        }
+
+        /* 画面遷移アニメーション */
+        .screen {
+            display: none;
+            animation: fadeIn 0.8s ease;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ローディング */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #d65db1;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 画面1: 基本情報入力 -->
+        <div id="screen-intro" class="screen active">
+            <h1>Princess Diagnosis</h1>
+            <p>いくつかの質問に答えて、あなたの中に眠るプリンセスの輝きを見つけましょう。</p>
+            
+            <div class="form-group">
+                <label>店舗を選択してください</label>
+                <select id="storeSelect" onchange="updateStaffList()">
+                    <option value="">選択してください</option>
+                    <option value="銀座本店">銀座本店</option>
+                    <option value="表参道店">表参道店</option>
+                    <option value="横浜店">横浜店</option>
+                    <option value="大阪店">大阪店</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>担当者を選択してください</label>
+                <select id="staffSelect" disabled>
+                    <option value="">店舗を選択してください</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>お名前（ニックネーム可）</label>
+                <input type="text" id="customerName" placeholder="例：山田 花子">
+            </div>
+
+            <button class="btn" onclick="startDiagnosis()">診断をはじめる</button>
+        </div>
+
+        <!-- 画面2: 質問 (JSで内容を書き換えます) -->
+        <div id="screen-question" class="screen">
+            <h2 id="q-number">Q1</h2>
+            <p id="q-text">質問内容がここに入ります</p>
+            <div id="options-container">
+                <!-- 選択肢ボタンがここに生成されます -->
+            </div>
+        </div>
+
+        <!-- 画面3: 完了・送信中 -->
+        <div id="screen-loading" class="screen">
+            <h2>Diagnosing...</h2>
+            <p>あなたの輝きを分析しています</p>
+            <div class="loader"></div>
+        </div>
+
+        <!-- 画面4: 完了メッセージ (結果は表示しない) -->
+        <div id="screen-finish" class="screen">
+            <h1>Complete</h1>
+            <p>診断が完了しました。</p>
+            <p>あなたのプリンセスタイプは記録されました。<br>詳しい診断結果とおすすめのジュエリーは、担当スタッフよりカードにてお渡しいたします。</p>
+            <p style="font-size: 12px; margin-top: 30px; color: #888;">そのままスタッフにお声がけください。</p>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================
+           設定エリア：ここを書き換えてください
+           ========================================= */
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhA-39Q_U-aHirCRvQCKTRHUrmt8QIQqKYpLLDZUz_d569bxwKURJjED3LUqBON0QI/exec'; // 手順2で取得したURLをここに貼る
+
+        // 店舗とスタッフの連携データ
+        const staffData = {
+            "銀座本店": ["佐藤", "鈴木", "高橋", "田中"],
+            "表参道店": ["伊藤", "渡辺", "山本", "中村"],
+            "横浜店": ["小林", "加藤", "吉田", "山田"],
+            "大阪店": ["佐々木", "山口", "松本", "井上"]
+        };
+
+        /* =========================================
+           診断データ
+           ========================================= */
+        const questions = [
+            {
+                q: "今、自分へのご褒美として選びたい「色」は？",
+                options: [
+                    { text: "燃えるような赤やオレンジ", type: "A" },
+                    { text: "優雅なベビーブルー", type: "B" },
+                    { text: "深いグリーンやゴールド", type: "C" },
+                    { text: "鮮やかなターコイズ", type: "D" },
+                    { text: "明るいイエローやピンク", type: "E" }
+                ]
+            },
+            {
+                q: "最高の気分転換になる「過ごし方」は？",
+                options: [
+                    { text: "未知の場所への刺激的な旅", type: "A" },
+                    { text: "クラシックなディナーや舞踏会", type: "B" },
+                    { text: "静かな書斎での思索", type: "C" },
+                    { text: "広大な場所で思いのまま動く", type: "D" },
+                    { text: "趣味の創作活動やスキル学習", type: "E" }
+                ]
+            },
+            {
+                q: "もし一つだけ魔法が使えるとしたら、何を選ぶ？",
+                options: [
+                    { text: "姿を変えて、自由に飛び込む力", type: "A" },
+                    { text: "愛の力で幸せに変える奇跡", type: "B" },
+                    { text: "人の心の真実を見抜く洞察力", type: "C" },
+                    { text: "誰も束縛できない自由の力", type: "D" },
+                    { text: "触れたものに希望を与える力", type: "E" }
+                ]
+            },
+            {
+                q: "あなたが惹かれる「ジュエリーのモチーフ」は？",
+                options: [
+                    { text: "波や流線型など、動きと変化", type: "A" },
+                    { text: "クラウンやティアラなど、ロマンス", type: "B" },
+                    { text: "薔薇や複雑な模様など、意味深", type: "C" },
+                    { text: "月や星など、異国を思わせる", type: "D" },
+                    { text: "太陽や花など、生命力を感じる", type: "E" }
+                ]
+            },
+            {
+                q: "「理想のパートナー」に求める、最も重要な要素は？",
+                options: [
+                    { text: "私の情熱や大胆な行動を応援", type: "A" },
+                    { text: "私の優しさを理解し、誠実に大切", type: "B" },
+                    { text: "知性があり、対話や学びを深める", type: "C" },
+                    { text: "私の自由と自立心を尊重し、束縛しない", type: "D" },
+                    { text: "一緒に新しい世界を探検し、楽しむ", type: "E" }
+                ]
+            }
+        ];
+
+        /* =========================================
+           ロジック処理
+           ========================================= */
+        let currentQIndex = 0;
+        let answers = []; // 選んだタイプ(A~E)を蓄積
+
+        // 1. 店舗選択時にスタッフリストを更新
+        function updateStaffList() {
+            const store = document.getElementById('storeSelect').value;
+            const staffSelect = document.getElementById('staffSelect');
+            staffSelect.innerHTML = '<option value="">担当者を選択してください</option>';
+            
+            if (store && staffData[store]) {
+                staffSelect.disabled = false;
+                staffData[store].forEach(staff => {
+                    const option = document.createElement('option');
+                    option.value = staff;
+                    option.textContent = staff;
+                    staffSelect.appendChild(option);
+                });
+            } else {
+                staffSelect.disabled = true;
+            }
+        }
+
+        // 2. 診断開始
+        function startDiagnosis() {
+            const store = document.getElementById('storeSelect').value;
+            const staff = document.getElementById('staffSelect').value;
+            const name = document.getElementById('customerName').value;
+
+            if (!store || !staff || !name) {
+                alert("すべての項目を入力してください");
+                return;
+            }
+
+            switchScreen('screen-intro', 'screen-question');
+            showQuestion();
+        }
+
+        // 3. 質問表示
+        function showQuestion() {
+            const qData = questions[currentQIndex];
+            document.getElementById('q-number').innerText = `Q${currentQIndex + 1}`;
+            document.getElementById('q-text').innerText = qData.q;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            qData.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => selectOption(opt.type);
+                container.appendChild(btn);
+            });
+        }
+
+        // 4. 回答選択時の処理
+        function selectOption(type) {
+            answers.push(type);
+            currentQIndex++;
+
+            if (currentQIndex < questions.length) {
+                // 次の質問へ（フェードアニメーションのため一瞬クリアするなどの演出も可）
+                showQuestion();
+            } else {
+                // 完了 -> 計算 -> 送信
+                finishDiagnosis();
+            }
+        }
+
+        // 5. 結果計算と送信
+        function finishDiagnosis() {
+            switchScreen('screen-question', 'screen-loading');
+
+            // 集計ロジック
+            const counts = { A:0, B:0, C:0, D:0, E:0 };
+            answers.forEach(a => counts[a]++);
+
+            // 最大値を見つける
+            let maxVal = 0;
+            Object.values(counts).forEach(v => {
+                if(v > maxVal) maxVal = v;
+            });
+
+            // 同点時の優先順位: D > A > E > C > B
+            const priority = ['D', 'A', 'E', 'C', 'B'];
+            let finalType = '';
+
+            for (let type of priority) {
+                if (counts[type] === maxVal) {
+                    finalType = type;
+                    break;
+                }
+            }
+
+            // プリンセス名への変換
+            const princessMap = {
+                A: "アリエル",
+                B: "シンデレラ",
+                C: "ベル",
+                D: "ジャスミン",
+                E: "ラプンツェル"
+            };
+
+            const finalResultName = princessMap[finalType];
+
+            // データを送信
+            sendDataToGAS(finalResultName);
+        }
+
+        // 6. GASへ送信
+        function sendDataToGAS(resultName) {
+            const data = {
+                store: document.getElementById('storeSelect').value,
+                staff: document.getElementById('staffSelect').value,
+                name: document.getElementById('customerName').value,
+                result: resultName,
+                answers: answers.join(',')
+            };
+
+            // no-corsモードで送信（GASからのレスポンスは見れないが、エラーが出ても送信はされる）
+            fetch(GAS_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                // 成功とみなして完了画面へ
+                setTimeout(() => {
+                    switchScreen('screen-loading', 'screen-finish');
+                }, 1500); // 演出用ウェイト
+            })
+            .catch(err => {
+                console.error(err);
+                alert("送信に失敗しました。スタッフにお知らせください。");
+            });
+        }
+
+        // 画面切り替えヘルパー
+        function switchScreen(hideId, showId) {
+            document.getElementById(hideId).classList.remove('active');
+            document.getElementById(showId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
