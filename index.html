@@ -22,44 +22,73 @@
             position: relative;
         }
 
-        /* キラキラ背景エフェクト（簡易版） */
+        /* 背景の固定キラキラ（奥の層） */
         body::before {
             content: "";
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             background-image: 
-                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
-                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
-                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
-            background-size: 550px 550px, 350px 350px, 250px 250px;
-            background-position: 0 0, 40px 60px, 130px 270px;
+                radial-gradient(white, rgba(255,255,255,.4) 2px, transparent 4px),
+                radial-gradient(white, rgba(255,255,255,.3) 1px, transparent 3px);
+            background-size: 550px 550px, 350px 350px;
+            background-position: 0 0, 40px 60px;
+            z-index: -2;
+            opacity: 0.8;
+        }
+
+        /* 動くキラキラ要素 */
+        .sparkle {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.9);
+            opacity: 0;
+            pointer-events: none;
+            animation: twinkle 3s infinite ease-in-out;
             z-index: -1;
-            opacity: 0.6;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(0.3); }
         }
 
         .container {
             width: 90%;
             max-width: 400px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.92); /* 少し透明度を下げる */
             border-radius: 20px;
             padding: 30px 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.3); /* ピンク色の柔らかい影 */
             border: 2px solid #fff;
             position: relative;
             text-align: center;
+            backdrop-filter: blur(5px); /* すりガラス効果 */
         }
 
-        /* 装飾的な枠線 */
+        /* 装飾的な枠線（ゴールド風） */
         .container::after {
             content: "";
             position: absolute;
-            top: 5px; left: 5px; right: 5px; bottom: 5px;
-            border: 1px solid #ee9ca7;
+            top: 8px; left: 8px; right: 8px; bottom: 8px;
+            border: 1px solid rgba(214, 93, 177, 0.5);
             border-radius: 15px;
             pointer-events: none;
         }
 
-        h1, h2 {
+        h1 {
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(to right, #d65db1, #845ec2);
+            -webkit-background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+            /* タイトルの光彩 */
+            text-shadow: 2px 2px 4px rgba(214, 93, 177, 0.2); 
+            filter: drop-shadow(0 0 8px rgba(214, 93, 177, 0.4));
+        }
+
+        h2 {
             font-family: 'Cinzel', serif;
             color: #d65db1;
             margin-bottom: 20px;
@@ -86,29 +115,55 @@
         }
         input, select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
+            padding: 12px;
+            border: 1px solid #e0c0d0;
             border-radius: 8px;
             box-sizing: border-box;
             font-family: 'Zen Mincho', serif;
-            background: #fffafa;
+            background: #fffbfd;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #d65db1;
+            box-shadow: 0 0 8px rgba(214, 93, 177, 0.2);
         }
 
         /* ボタン */
         .btn {
-            background: linear-gradient(to right, #d65db1, #845ec2);
+            background: linear-gradient(135deg, #d65db1, #845ec2);
             color: white;
             border: none;
-            padding: 12px 30px;
-            border-radius: 25px;
+            padding: 14px 30px;
+            border-radius: 30px;
             font-size: 16px;
             cursor: pointer;
             font-family: 'Zen Mincho', serif;
             transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 10px rgba(132, 94, 194, 0.3);
+            box-shadow: 0 4px 15px rgba(132, 94, 194, 0.4);
             width: 100%;
-            margin-top: 10px;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
         }
+        /* ボタンのキラリと光るエフェクト */
+        .btn::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: rotate(45deg) translate(-100%, 0);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { transform: rotate(45deg) translate(-150%, 0); }
+            20% { transform: rotate(45deg) translate(150%, 0); }
+            100% { transform: rotate(45deg) translate(150%, 0); }
+        }
+
         .btn:active {
             transform: scale(0.98);
         }
@@ -117,26 +172,35 @@
             cursor: not-allowed;
             box-shadow: none;
         }
+        .btn:disabled::after {
+            display: none;
+        }
 
         /* 選択肢ボタン */
         .option-btn {
             display: block;
             width: 100%;
             background: white;
-            border: 1px solid #ee9ca7;
-            color: #555;
+            border: 1px solid #f0d0e0;
+            color: #666;
             padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 10px;
+            margin-bottom: 12px;
+            border-radius: 12px;
             text-align: left;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
         }
-        .option-btn:hover, .option-btn:active {
+        .option-btn:hover {
             background: #fff0f5;
             border-color: #d65db1;
             color: #d65db1;
+            box-shadow: 0 2px 8px rgba(214, 93, 177, 0.2);
+            transform: translateY(-2px);
+        }
+        .option-btn:active {
+            transform: translateY(0);
         }
 
         /* 画面遷移アニメーション */
@@ -321,6 +385,9 @@
            初期化処理：GASから設定を読み込む（失敗時はデフォルト使用）
            ========================================= */
         window.onload = function() {
+            // 背景のキラキラアニメーションを開始
+            createSparkles();
+
             // GAS_URLがプレースホルダーの場合、または設定されていない場合はデフォルトを使用
             if (!GAS_URL || GAS_URL === 'YOUR_GAS_WEB_APP_URL') {
                 console.log("GAS_URL未設定のため、デフォルトデータで起動します。");
@@ -329,6 +396,34 @@
                 fetchConfig();
             }
         };
+
+        // キラキラ要素を生成する関数
+        function createSparkles() {
+            const sparkleCount = 40; // 星の数
+            const body = document.body;
+            
+            for (let i = 0; i < sparkleCount; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.classList.add('sparkle');
+                
+                // ランダムな位置
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                sparkle.style.left = `${x}%`;
+                sparkle.style.top = `${y}%`;
+                
+                // ランダムなサイズ
+                const size = Math.random() * 5 + 2; // 2px ~ 7px
+                sparkle.style.width = `${size}px`;
+                sparkle.style.height = `${size}px`;
+                
+                // ランダムなアニメーション遅延
+                sparkle.style.animationDelay = `${Math.random() * 5}s`;
+                sparkle.style.animationDuration = `${Math.random() * 3 + 2}s`; // 2~5秒
+                
+                body.appendChild(sparkle);
+            }
+        }
 
         function fetchConfig() {
             // GETリクエストで設定を取得
