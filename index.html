@@ -69,6 +69,7 @@
             font-size: 14px;
             line-height: 1.6;
             margin-bottom: 20px;
+            white-space: pre-wrap; /* 改行コードを反映 */
         }
 
         /* 入力フォームスタイル */
@@ -173,19 +174,22 @@
 <body>
 
     <div class="container">
+        <!-- 画面0: 初期ロード画面 -->
+        <div id="screen-boot" class="screen active">
+            <h2>Loading...</h2>
+            <div class="loader"></div>
+            <p style="font-size:12px; margin-top:10px;">設定を読み込んでいます</p>
+        </div>
+
         <!-- 画面1: 基本情報入力 -->
-        <div id="screen-intro" class="screen active">
-            <h1>Princess Diagnosis</h1>
-            <p>いくつかの質問に答えて、あなたの中に眠るプリンセスの輝きを見つけましょう。</p>
+        <div id="screen-intro" class="screen">
+            <h1 id="ui-title">Princess Diagnosis</h1>
+            <p id="ui-desc">いくつかの質問に答えて、あなたの中に眠るプリンセスの輝きを見つけましょう。</p>
             
             <div class="form-group">
                 <label>店舗を選択してください</label>
                 <select id="storeSelect" onchange="updateStaffList()">
                     <option value="">選択してください</option>
-                    <option value="銀座本店">銀座本店</option>
-                    <option value="表参道店">表参道店</option>
-                    <option value="横浜店">横浜店</option>
-                    <option value="大阪店">大阪店</option>
                 </select>
             </div>
 
@@ -222,9 +226,8 @@
 
         <!-- 画面4: 完了メッセージ (結果は表示しない) -->
         <div id="screen-finish" class="screen">
-            <h1>Complete</h1>
-            <p>診断が完了しました。</p>
-            <p>あなたのプリンセスタイプは記録されました。<br>詳しい診断結果とおすすめのジュエリーは、担当スタッフよりカードにてお渡しいたします。</p>
+            <h1 id="ui-finish-title">Complete</h1>
+            <p id="ui-finish-desc">診断が完了しました。</p>
             <p style="font-size: 12px; margin-top: 30px; color: #888;">そのままスタッフにお声がけください。</p>
         </div>
     </div>
@@ -233,78 +236,156 @@
         /* =========================================
            設定エリア：ここを書き換えてください
            ========================================= */
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzhA-39Q_U-aHirCRvQCKTRHUrmt8QIQqKYpLLDZUz_d569bxwKURJjED3LUqBON0QI/exec'; // 手順2で取得したURLをここに貼る
+        // GASのURLが未設定でも動作するように、デフォルト値を 'YOUR_GAS_WEB_APP_URL' のままにしています
+        const GAS_URL = 'YOUR_GAS_WEB_APP_URL'; 
 
-        // 店舗とスタッフの連携データ
-        const staffData = {
-            "銀座本店": ["佐藤", "鈴木", "高橋", "田中"],
-            "表参道店": ["伊藤", "渡辺", "山本", "中村"],
-            "横浜店": ["小林", "加藤", "吉田", "山田"],
-            "大阪店": ["佐々木", "山口", "松本", "井上"]
+        /* =========================================
+           デフォルトデータ（GAS接続失敗時のフォールバック用）
+           ========================================= */
+        const defaultData = {
+            texts: {
+                TITLE: "Princess Diagnosis",
+                INTRO_DESC: "いくつかの質問に答えて、あなたの中に眠るプリンセスの輝きを見つけましょう。",
+                FINISH_TITLE: "Complete",
+                FINISH_DESC: "診断が完了しました。\n結果は担当スタッフよりお受け取りください。"
+            },
+            staffData: {
+                "銀座本店": ["佐藤", "鈴木", "高橋", "田中"],
+                "表参道店": ["伊藤", "渡辺", "山本", "中村"],
+                "横浜店": ["小林", "加藤", "吉田", "山田"],
+                "大阪店": ["佐々木", "山口", "松本", "井上"]
+            },
+            questions: [
+                {
+                    q: "今、自分へのご褒美として選びたい「色」は？",
+                    options: [
+                        { text: "燃えるような赤やオレンジ", type: "A" },
+                        { text: "優雅なベビーブルー", type: "B" },
+                        { text: "深いグリーンやゴールド", type: "C" },
+                        { text: "鮮やかなターコイズ", type: "D" },
+                        { text: "明るいイエローやピンク", type: "E" }
+                    ]
+                },
+                {
+                    q: "最高の気分転換になる「過ごし方」は？",
+                    options: [
+                        { text: "未知の場所への刺激的な旅", type: "A" },
+                        { text: "クラシックなディナーや舞踏会", type: "B" },
+                        { text: "静かな書斎での思索", type: "C" },
+                        { text: "広大な場所で思いのまま動く", type: "D" },
+                        { text: "趣味の創作活動やスキル学習", type: "E" }
+                    ]
+                },
+                {
+                    q: "もし一つだけ魔法が使えるとしたら、何を選ぶ？",
+                    options: [
+                        { text: "姿を変えて、自由に飛び込む力", type: "A" },
+                        { text: "愛の力で幸せに変える奇跡", type: "B" },
+                        { text: "人の心の真実を見抜く洞察力", type: "C" },
+                        { text: "誰も束縛できない自由の力", type: "D" },
+                        { text: "触れたものに希望を与える力", type: "E" }
+                    ]
+                },
+                {
+                    q: "あなたが惹かれる「ジュエリーのモチーフ」は？",
+                    options: [
+                        { text: "波や流線型など、動きと変化", type: "A" },
+                        { text: "クラウンやティアラなど、ロマンス", type: "B" },
+                        { text: "薔薇や複雑な模様など、意味深", type: "C" },
+                        { text: "月や星など、異国を思わせる", type: "D" },
+                        { text: "太陽や花など、生命力を感じる", type: "E" }
+                    ]
+                },
+                {
+                    q: "「理想のパートナー」に求める、最も重要な要素は？",
+                    options: [
+                        { text: "私の情熱や大胆な行動を応援", type: "A" },
+                        { text: "私の優しさを理解し、誠実に大切", type: "B" },
+                        { text: "知性があり、対話や学びを深める", type: "C" },
+                        { text: "私の自由と自立心を尊重し、束縛しない", type: "D" },
+                        { text: "一緒に新しい世界を探検し、楽しむ", type: "E" }
+                    ]
+                }
+            ]
         };
 
         /* =========================================
-           診断データ
+           変数の初期化
            ========================================= */
-        const questions = [
-            {
-                q: "今、自分へのご褒美として選びたい「色」は？",
-                options: [
-                    { text: "燃えるような赤やオレンジ", type: "A" },
-                    { text: "優雅なベビーブルー", type: "B" },
-                    { text: "深いグリーンやゴールド", type: "C" },
-                    { text: "鮮やかなターコイズ", type: "D" },
-                    { text: "明るいイエローやピンク", type: "E" }
-                ]
-            },
-            {
-                q: "最高の気分転換になる「過ごし方」は？",
-                options: [
-                    { text: "未知の場所への刺激的な旅", type: "A" },
-                    { text: "クラシックなディナーや舞踏会", type: "B" },
-                    { text: "静かな書斎での思索", type: "C" },
-                    { text: "広大な場所で思いのまま動く", type: "D" },
-                    { text: "趣味の創作活動やスキル学習", type: "E" }
-                ]
-            },
-            {
-                q: "もし一つだけ魔法が使えるとしたら、何を選ぶ？",
-                options: [
-                    { text: "姿を変えて、自由に飛び込む力", type: "A" },
-                    { text: "愛の力で幸せに変える奇跡", type: "B" },
-                    { text: "人の心の真実を見抜く洞察力", type: "C" },
-                    { text: "誰も束縛できない自由の力", type: "D" },
-                    { text: "触れたものに希望を与える力", type: "E" }
-                ]
-            },
-            {
-                q: "あなたが惹かれる「ジュエリーのモチーフ」は？",
-                options: [
-                    { text: "波や流線型など、動きと変化", type: "A" },
-                    { text: "クラウンやティアラなど、ロマンス", type: "B" },
-                    { text: "薔薇や複雑な模様など、意味深", type: "C" },
-                    { text: "月や星など、異国を思わせる", type: "D" },
-                    { text: "太陽や花など、生命力を感じる", type: "E" }
-                ]
-            },
-            {
-                q: "「理想のパートナー」に求める、最も重要な要素は？",
-                options: [
-                    { text: "私の情熱や大胆な行動を応援", type: "A" },
-                    { text: "私の優しさを理解し、誠実に大切", type: "B" },
-                    { text: "知性があり、対話や学びを深める", type: "C" },
-                    { text: "私の自由と自立心を尊重し、束縛しない", type: "D" },
-                    { text: "一緒に新しい世界を探検し、楽しむ", type: "E" }
-                ]
+        let staffData = {};
+        let questions = [];
+        let currentQIndex = 0;
+        let answers = [];
+
+        /* =========================================
+           初期化処理：GASから設定を読み込む（失敗時はデフォルト使用）
+           ========================================= */
+        window.onload = function() {
+            // GAS_URLがプレースホルダーの場合、または設定されていない場合はデフォルトを使用
+            if (!GAS_URL || GAS_URL === 'YOUR_GAS_WEB_APP_URL') {
+                console.log("GAS_URL未設定のため、デフォルトデータで起動します。");
+                applyConfig(defaultData);
+            } else {
+                fetchConfig();
             }
-        ];
+        };
+
+        function fetchConfig() {
+            // GETリクエストで設定を取得
+            fetch(GAS_URL)
+                .then(response => response.json())
+                .then(data => {
+                    applyConfig(data);
+                })
+                .catch(err => {
+                    console.error('Config Load Error:', err);
+                    console.log("設定読み込み失敗のため、デフォルトデータで起動します。");
+                    applyConfig(defaultData); // エラー時はデフォルトデータで起動
+                });
+        }
+
+        function applyConfig(data) {
+            // 1. テキストの反映
+            if(data.texts) {
+                if(data.texts.TITLE) document.getElementById('ui-title').innerText = data.texts.TITLE;
+                if(data.texts.INTRO_DESC) document.getElementById('ui-desc').innerText = data.texts.INTRO_DESC;
+                if(data.texts.FINISH_TITLE) document.getElementById('ui-finish-title').innerText = data.texts.FINISH_TITLE;
+                if(data.texts.FINISH_DESC) document.getElementById('ui-finish-desc').innerText = data.texts.FINISH_DESC;
+            }
+
+            // 2. スタッフデータの反映
+            if(data.staffData) {
+                staffData = data.staffData;
+                initStoreSelect();
+            }
+
+            // 3. 質問データの反映
+            if(data.questions) {
+                questions = data.questions;
+            }
+
+            // ロード完了 -> イントロ画面へ
+            setTimeout(() => {
+                switchScreen('screen-boot', 'screen-intro');
+            }, 800);
+        }
+
+        // 店舗プルダウンの初期化
+        function initStoreSelect() {
+            const storeSelect = document.getElementById('storeSelect');
+            storeSelect.innerHTML = '<option value="">選択してください</option>';
+            Object.keys(staffData).forEach(storeName => {
+                const option = document.createElement('option');
+                option.value = storeName;
+                option.textContent = storeName;
+                storeSelect.appendChild(option);
+            });
+        }
 
         /* =========================================
            ロジック処理
            ========================================= */
-        let currentQIndex = 0;
-        let answers = []; // 選んだタイプ(A~E)を蓄積
-
+        
         // 1. 店舗選択時にスタッフリストを更新
         function updateStaffList() {
             const store = document.getElementById('storeSelect').value;
@@ -332,6 +413,11 @@
 
             if (!store || !staff || !name) {
                 alert("すべての項目を入力してください");
+                return;
+            }
+            
+            if (questions.length === 0) {
+                alert("質問データが読み込まれていません。");
                 return;
             }
 
@@ -363,10 +449,8 @@
             currentQIndex++;
 
             if (currentQIndex < questions.length) {
-                // 次の質問へ（フェードアニメーションのため一瞬クリアするなどの演出も可）
                 showQuestion();
             } else {
-                // 完了 -> 計算 -> 送信
                 finishDiagnosis();
             }
         }
@@ -379,7 +463,6 @@
             const counts = { A:0, B:0, C:0, D:0, E:0 };
             answers.forEach(a => counts[a]++);
 
-            // 最大値を見つける
             let maxVal = 0;
             Object.values(counts).forEach(v => {
                 if(v > maxVal) maxVal = v;
@@ -396,7 +479,6 @@
                 }
             }
 
-            // プリンセス名への変換
             const princessMap = {
                 A: "アリエル",
                 B: "シンデレラ",
@@ -413,6 +495,18 @@
 
         // 6. GASへ送信
         function sendDataToGAS(resultName) {
+            // URLがデフォルトのままなら送信せず完了画面へ (デモモード)
+            if (!GAS_URL || GAS_URL === 'YOUR_GAS_WEB_APP_URL') {
+                console.log("デモモード: データ送信をスキップしました。", {
+                    result: resultName,
+                    answers: answers
+                });
+                setTimeout(() => {
+                    switchScreen('screen-loading', 'screen-finish');
+                }, 1500);
+                return;
+            }
+
             const data = {
                 store: document.getElementById('storeSelect').value,
                 staff: document.getElementById('staffSelect').value,
@@ -421,7 +515,6 @@
                 answers: answers.join(',')
             };
 
-            // no-corsモードで送信（GASからのレスポンスは見れないが、エラーが出ても送信はされる）
             fetch(GAS_URL, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -431,10 +524,9 @@
                 body: JSON.stringify(data)
             })
             .then(() => {
-                // 成功とみなして完了画面へ
                 setTimeout(() => {
                     switchScreen('screen-loading', 'screen-finish');
-                }, 1500); // 演出用ウェイト
+                }, 1500);
             })
             .catch(err => {
                 console.error(err);
@@ -442,10 +534,11 @@
             });
         }
 
-        // 画面切り替えヘルパー
         function switchScreen(hideId, showId) {
-            document.getElementById(hideId).classList.remove('active');
-            document.getElementById(showId).classList.add('active');
+            const hideEl = document.getElementById(hideId);
+            const showEl = document.getElementById(showId);
+            if(hideEl) hideEl.classList.remove('active');
+            if(showEl) showEl.classList.add('active');
         }
     </script>
 </body>
